@@ -79,7 +79,10 @@ export default function StickerHunt({
   useEffect(() => {
     try {
       const raw = localStorage.getItem(FRIEND_KEY);
-      if (raw) setExistingFriend(JSON.parse(raw) as string);
+      if (raw) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setExistingFriend(JSON.parse(raw) as string);
+      }
     } catch {
       /* no friend yet */
     }
