@@ -43,33 +43,57 @@ export async function getNavigation() {
   }[];
 }
 
-export async function getSettings() {
-  const live = await fsGet("settings", "default");
-  return (live ?? snapshot.settings) as {
-    id: string;
-    displayName: string;
-    fullName: string;
-    monogram: string;
-    email: string;
-    location: string;
-    availability: string;
-    socials: string;
-    contactChannels: string;
-    defaultSeoTitle: string;
-    defaultSeoDescription: string;
-    ogImageId: string | null;
-    accent: string;
-    typography: string;
-    introEnabled: boolean;
-    reducedMotionFallback: boolean;
-    questEnabled: boolean;
-    questTitle: string;
-    questReward: string;
-    footerText: string;
-    updatedAt: string;
-  };
+/** The admin may store socials/contactChannels as a raw array (Firestore
+ *  native) or as a JSON string — accept both, and fall back to the bundled
+ *  snapshot's value when the stored one is empty. */
+function jsonField(live: unknown, fallback: string): string {
+  if (typeof live === "string" && live.trim().startsWith("[")) {
+    try {
+      const parsed = JSON.parse(live) as unknown[];
+      return parsed.length > 0 ? live : fallback;
+    } catch {
+      return fallback;
+    }
+  }
+  if (Array.isArray(live) && live.length > 0) return JSON.stringify(live);
+  return fallback;
 }
 
+export interface SiteSettings {
+  id: string;
+  displayName: string;
+  fullName: string;
+  monogram: string;
+  email: string;
+  location: string;
+  availability: string;
+  socials: string;
+  contactChannels: string;
+  defaultSeoTitle: string;
+  defaultSeoDescription: string;
+  ogImageId: string | null;
+  accent: string;
+  typography: string;
+  introEnabled: boolean;
+  reducedMotionFallback: boolean;
+  questEnabled: boolean;
+  questTitle: string;
+  questReward: string;
+  footerText: string;
+  updatedAt: string;
+}
+
+export async function getSettings(): Promise<SiteSettings> {
+  const live = await fsGet("settings", "default");
+  if (!live) return snapshot.settings as unknown as SiteSettings;
+  const merged = {
+    ...snapshot.settings,
+    ...Object.fromEntries(Object.entries(live).filter(([, v]) => v !== null && v !== undefined && v !== "")),
+    socials: jsonField(live.socials, String(snapshot.settings.socials ?? "[]")),
+    contactChannels: jsonField(live.contactChannels, String(snapshot.settings.contactChannels ?? "[]")),
+  };
+  return merged as unknown as SiteSettings;
+}
 export interface PageWithBlocks {
   id: string;
   slug: string;

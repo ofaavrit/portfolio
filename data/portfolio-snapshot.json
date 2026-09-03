@@ -12,7 +12,7 @@
   "location": "Nepal",
   "availability": "Open to fun web projects",
   "socials": "[{\"label\":\"Instagram\",\"url\":\"https://instagram.com/amaavrit\"}]",
-  "contactChannels": "[{\"label\":\"Email\",\"value\":\"amaavrit@yahoo.com\",\"href\":\"mailto:amaavrit@yahoo.com\"},{\"label\":\"Email\",\"value\":\"itzAavrit4@gmail.com\",\"href\":\"mailto:itzAavrit4@gmail.com\"},{\"label\":\"Email\",\"value\":\"reflectioncapturedthoughts@proton.me\",\"href\":\"mailto:reflectioncapturedthoughts@proton.me\"},{\"label\":\"Phone\",\"value\":\"+977-9828763412\",\"href\":\"tel:+9779828763412\"},{\"label\":\"Instagram\",\"value\":\"@amaavrit\",\"href\":\"https://instagram.com/amaavrit\"}]",
+  "contactChannels": "[{\"label\":\"Phone\",\"value\":\"+977 9828763412\",\"href\":\"tel:+9779828763412\"},{\"label\":\"E-mail\",\"value\":\"amaavrit@yahoo.com\",\"href\":\"mailto:amaavrit@yahoo.com\"},{\"label\":\"E-mail\",\"value\":\"reflectioncapturedthoughts@proton.me\",\"href\":\"mailto:reflectioncapturedthoughts@proton.me\"},{\"label\":\"Instagram\",\"value\":\"@amaavrit\",\"href\":\"https://www.instagram.com/amaavrit\"}]",
   "defaultSeoTitle": "AAVRIT — Aavrit Gupta",
   "defaultSeoDescription": "The interactive autobiography of Aavrit Gupta: websites built with AI, interests, hobbies and the ARCT dream project.",
   "ogImageId": null,

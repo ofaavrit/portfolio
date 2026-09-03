@@ -91,6 +91,23 @@ export async function fsCreate(
 }
 
 /* ── Reads with graceful degradation ───────────────────────────────── */
+/* A 5-second micro-cache keeps repeat renders instant while admin edits
+ * still appear on the very next refresh — "instantly visible". */
+const microCache = new Map<string, { at: number; data: unknown }>();
+const MICRO_TTL_MS = 5_000;
+
+async function cached<T>(key: string, load: () => Promise<T>): Promise<T> {
+  const hit = microCache.get(key);
+  const now = Date.now();
+  if (hit && now - hit.at < MICRO_TTL_MS) return hit.data as T;
+  const data = await load();
+  microCache.set(key, { at: now, data });
+  return data;
+}
+
+export function clearContentCache() {
+  microCache.clear();
+}
 
 export type FsDoc = Record<string, unknown> & { id: string };
 
@@ -104,32 +121,35 @@ export function decodeDoc(doc: { name?: string; fields?: Record<string, FsValue>
  *  collection), so callers fall back to the bundled snapshot until the
  *  database is seeded. */
 export async function fsList(collectionId: string): Promise<FsDoc[] | null> {
-  try {
-    const res = await fetch(`${BASE}/${collectionId}?key=${FIREBASE_CONFIG.apiKey}&pageSize=500`, {
-      next: { revalidate: 120 },
-    } as RequestInit);
-    if (!res.ok) return null;
-    const data = (await res.json()) as { documents?: { name?: string; fields?: Record<string, FsValue> }[] };
-    if (!Array.isArray(data.documents) || data.documents.length === 0) return null;
-    return data.documents.map(decodeDoc);
-  } catch {
-    return null;
-  }
+  return cached(`list:${collectionId}`, async () => {
+    try {
+      const res = await fetch(`${BASE}/${collectionId}?key=${FIREBASE_CONFIG.apiKey}&pageSize=500`, {
+        cache: "no-store",
+      } as RequestInit);
+      if (!res.ok) return null;
+      const data = (await res.json()) as { documents?: { name?: string; fields?: Record<string, FsValue> }[] };
+      if (!Array.isArray(data.documents) || data.documents.length === 0) return null;
+      return data.documents.map(decodeDoc);
+    } catch {
+      return null;
+    }
+  });
 }
 
 /** Read one document. Returns null when missing or unreachable. */
 export async function fsGet(collectionId: string, docId: string): Promise<FsDoc | null> {
-  try {
-    const res = await fetch(
-      `${BASE}/${collectionId}/${docId}?key=${FIREBASE_CONFIG.apiKey}`,
-      { next: { revalidate: 120 } } as RequestInit,
-    );
-    if (!res.ok) return null;
-    const data = (await res.json()) as { name?: string; fields?: Record<string, FsValue> };
-    return decodeDoc(data);
-  } catch {
-    return null;
-  }
+  return cached(`get:${collectionId}:${docId}`, async () => {
+    try {
+      const res = await fetch(`${BASE}/${collectionId}/${docId}?key=${FIREBASE_CONFIG.apiKey}`, {
+        cache: "no-store",
+      } as RequestInit);
+      if (!res.ok) return null;
+      const data = (await res.json()) as { name?: string; fields?: Record<string, FsValue> };
+      return decodeDoc(data);
+    } catch {
+      return null;
+    }
+  });
 }
 
 /** Ping Firestore — used by /api/health to report which mode the site is in. */

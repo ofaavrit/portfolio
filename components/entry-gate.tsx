@@ -18,11 +18,22 @@ type Phase = "deciding" | "gate" | "constructing" | "done";
 
 export default function EntryGate({ introEnabled }: { introEnabled: boolean }) {
   const [phase, setPhase] = useState<Phase>("deciding");
+  // AAVRIT reads as ONE horizontal line on wide screens, ONE vertical line
+  // on tall/narrow ones — the name always fits, never wraps, never overflows.
+  const [vertical, setVertical] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
   const tilesRef = useRef<HTMLSpanElement>(null);
   const constructRef = useRef<HTMLDivElement>(null);
   const enteredRef = useRef(false);
   const cleanupFns = useRef<(() => void)[]>([]);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 640px), (max-height: 520px)");
+    const sync = () => setVertical(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   useEffect(() => {
     // Deferred a micro-task so the curtain class is removed after first paint
@@ -230,14 +241,14 @@ export default function EntryGate({ introEnabled }: { introEnabled: boolean }) {
       {/* misregistered cover print — the deck's page 1, layered behind the tiles */}
       <span
         aria-hidden="true"
-        className="voice-condensed pointer-events-none absolute inset-0 flex items-center justify-center text-[38vw] leading-none opacity-[0.16] select-none"
+        className="voice-condensed pointer-events-none absolute inset-0 hidden items-center justify-center text-[38vw] leading-none opacity-[0.08] select-none sm:flex"
         style={{ color: "#ff00ff", transform: "translate(-1.2vw, -0.8vh) rotate(-4deg)" }}
       >
         AAVRIT
       </span>
       <span
         aria-hidden="true"
-        className="voice-condensed pointer-events-none absolute inset-0 flex items-center justify-center text-[38vw] leading-none opacity-[0.16] select-none"
+        className="voice-condensed pointer-events-none absolute inset-0 hidden items-center justify-center text-[38vw] leading-none opacity-[0.08] select-none sm:flex"
         style={{ color: "#00c8c8", transform: "translate(1.2vw, 0.9vh) rotate(3deg)" }}
       >
         AAVRIT
@@ -255,14 +266,30 @@ export default function EntryGate({ introEnabled }: { introEnabled: boolean }) {
         </span>
         <span
           ref={tilesRef}
-          className="flex items-center gap-[clamp(0.35rem,1.6vw,1.1rem)]"
+          className={
+            vertical
+              ? "flex flex-col items-center gap-[clamp(0.3rem,1.2vh,0.7rem)]"
+              : "flex items-center gap-[clamp(0.35rem,1.4vw,1rem)]"
+          }
           aria-hidden="true"
         >
           <LetterTiles
             text="AAVRIT"
             animateIdle
-            tileClassName="text-[clamp(3rem,14vw,9.5rem)] w-[1.3em] h-[1.24em]"
+            vertical={vertical}
+            tileClassName={
+              vertical
+                ? "text-[min(10.5vh,8.5vw)] w-[1.2em] h-[1.18em]"
+                : "text-[clamp(2.4rem,9.6vw,8.5rem)] w-[1.18em] h-[1.16em]"
+            }
           />
+        </span>
+        <span className="gate-loading" aria-hidden="true">
+          <span className="gate-bar"><i /></span>
+          <span className="gate-label">
+            ENTERING AAVRIT&apos;S PORTFOLIO
+            <span className="gate-dots"><b /><b /><b /></span>
+          </span>
         </span>
       </button>
 

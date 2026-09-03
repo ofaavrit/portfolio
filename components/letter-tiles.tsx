@@ -20,16 +20,23 @@ export default function LetterTiles({
   style,
   animateIdle = false,
   tileClassName = "",
+  vertical = false,
 }: {
   text: string;
   className?: string;
   style?: CSSProperties;
   animateIdle?: boolean;
   tileClassName?: string;
+  /** Stack the letters in a single vertical line (mobile entry view). */
+  vertical?: boolean;
 }) {
   const letters = text.split("");
   return (
-    <span className={`inline-flex ${className}`} style={style} aria-hidden="true">
+    <span
+      className={`${vertical ? "inline-flex flex-col" : "inline-flex"} ${className}`}
+      style={style}
+      aria-hidden="true"
+    >
       {letters.map((letter, i) => {
         const tone = TONE_BG[letterTone(i)];
         return (

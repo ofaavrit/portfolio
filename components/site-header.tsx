@@ -13,11 +13,13 @@ export interface NavItem {
 }
 
 export default function SiteHeader({
+  monogram = "AA",
   items,
   displayName,
 }: {
   items: NavItem[];
   displayName: string;
+  monogram?: string;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -71,8 +73,12 @@ export default function SiteHeader({
             aria-label={`${displayName} — home`}
           >
             <span className="flex gap-1" aria-hidden="true">
-              <span className="tile h-9 w-9 text-[0.95rem]" style={{ "--tile-bg": "#ffd200", "--tile-shadow": "#ff3873", fontStretch: "100%" } as React.CSSProperties}>A</span>
-              <span className="tile h-9 w-9 text-[0.95rem] -rotate-6 group-hover:rotate-0 transition-transform duration-300" style={{ "--tile-bg": "#3ef2e4", "--tile-shadow": "#ceef32", fontStretch: "100%" } as React.CSSProperties}>A</span>
+              <span className="tile tile-live h-9 w-9 text-[0.95rem]" style={{ "--tile-bg": "#ffd200", "--tile-shadow": "#ff3873", fontStretch: "100%" } as React.CSSProperties}>
+                {(monogram[0] ?? "A").toUpperCase()}
+              </span>
+              <span className="tile tile-live tile-live-2 h-9 w-9 text-[0.95rem] -rotate-6 group-hover:rotate-0 transition-transform duration-300" style={{ "--tile-bg": "#3ef2e4", "--tile-shadow": "#ceef32", fontStretch: "100%" } as React.CSSProperties}>
+                {(monogram[1] ?? monogram[0] ?? "A").toUpperCase()}
+              </span>
             </span>
             <span className="font-black-exp text-lg tracking-tight" style={{ color: "#1b3624" }}>
               {displayName}

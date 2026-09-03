@@ -16,7 +16,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       <EntryGate introEnabled={settings.introEnabled} />
       <ScrollProgress />
       <CursorPreview />
-      <SiteHeader items={navItems} displayName={settings.displayName} />
+      <SiteHeader items={navItems} displayName={settings.displayName} monogram={settings.monogram || "AA"} />
       <main id="main" tabIndex={-1} className="outline-none">
         {children}
       </main>

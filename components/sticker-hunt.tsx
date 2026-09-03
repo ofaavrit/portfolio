@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import StickerGlyph, { type StickerName } from "./sticker-svg";
 import { burstFromElement, burstConfetti } from "./confetti";
+import { fsCreate } from "@/lib/fsdb";
 
 /**
  * THE STICKER HUNT — "FIND MY WEBSITES", straight from page 7 of the owner's
@@ -20,6 +21,7 @@ import { burstFromElement, burstConfetti } from "./confetti";
  */
 
 const STORAGE_KEY = "aavrit:stickers.v1";
+const FRIEND_KEY = "aavrit:friend";
 
 const COLLECT_LINES = [
   "NICE EYE!",
@@ -67,6 +69,45 @@ export default function StickerHunt({
   const [trayOpen, setTrayOpen] = useState(false);
   const [justCollected, setJustCollected] = useState<StickerName | null>(null);
   const [showReward, setShowReward] = useState(false);
+
+  // ── the heart book: Aavrit's List of friends ──
+  const [bookOpen, setBookOpen] = useState(false);
+  const [friendName, setFriendName] = useState("");
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "local">("idle");
+  const [existingFriend, setExistingFriend] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(FRIEND_KEY);
+      if (raw) setExistingFriend(JSON.parse(raw) as string);
+    } catch {
+      /* no friend yet */
+    }
+  }, []);
+
+  async function saveFriend(e: React.FormEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    const name = friendName.trim().slice(0, 40);
+    if (name.length < 2 || saveState === "saving") return;
+    setSaveState("saving");
+    const ok = await fsCreate("friends", `fr-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`, {
+      name,
+      source: "sticker-hunt",
+      createdAt: new Date().toISOString(),
+    });
+    try {
+      localStorage.setItem(FRIEND_KEY, JSON.stringify(name));
+    } catch {
+      /* private mode */
+    }
+    setExistingFriend(name);
+    window.setTimeout(() => {
+      setSaveState(ok ? "saved" : "local");
+      setBookOpen(false); // the book closes — the name is kept in the heart
+      burstConfetti(window.innerWidth / 2, window.innerHeight * 0.4, 40);
+    }, 650);
+  }
 
   useEffect(() => {
     // deferred a micro-task so state updates never cascade synchronously
@@ -235,50 +276,126 @@ export default function StickerHunt({
         ) : null}
       </div>
 
-      {/* reward modal — the names, at last */}
+      {/* reward — the HEART BOOK: save your name in Aavrit's List */}
       {showReward ? (
         <div
-          className="fixed inset-0 z-[120] grid place-items-center p-5"
-          style={{ background: "rgba(6,0,41,0.82)" }}
+          className="fixed inset-0 z-[120] grid place-items-center overflow-y-auto p-5"
+          style={{ background: "rgba(6,0,41,0.86)" }}
           role="dialog"
           aria-modal="true"
-          aria-label="Sticker hunt reward"
+          aria-label="Sticker hunt reward — save your name in Aavrit's List"
           onClick={() => setShowReward(false)}
         >
           <div
-            className="sticker-cut relative w-[min(34rem,92vw)] p-7 text-center"
-            style={{ background: "#fff1e1", rotate: "-1.2deg" }}
+            className="flex w-[min(34rem,94vw)] flex-col items-center gap-5 py-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="tape-strip" style={{ top: "-13px", left: "24%", rotate: "-6deg" }} aria-hidden="true" />
-            <div className="tape-strip" style={{ top: "-13px", right: "24%", rotate: "5deg" }} aria-hidden="true" />
-            <div className="mb-3 flex justify-center gap-2" aria-hidden="true">
-              {SPOTS.map((s) => (
-                <StickerGlyph key={s.id} name={s.id} size={30} />
-              ))}
-            </div>
-            <p className="voice-condensed offset-print text-4xl uppercase sm:text-5xl" style={{ color: "#111" }}>
+            <p className="voice-condensed offset-print text-3xl uppercase sm:text-4xl" style={{ color: "#fff1e1" }}>
               {title}
             </p>
-            <p className="mono-label mt-2" style={{ color: "#444" }}>
-              ALL {SPOTS.length} STICKERS FOUND — AS PROMISED, THE NAMES:
+            <p className="mono-label -mt-3" style={{ color: "#ffd200" }}>
+              ALL {SPOTS.length} STICKERS FOUND — THE HEART IS YOURS TO SIGN
             </p>
-            <p className="voice-marker mt-3 text-xl leading-snug sm:text-2xl" style={{ color: "#060029" }}>
-              {reward}
-            </p>
-            <div className="mt-5 flex flex-wrap items-center justify-center gap-3">
-              <Link
-                href="/websites"
-                className="pill border-[#111]"
-                style={{ background: "#ffd200", color: "#111" }}
-                onClick={() => setShowReward(false)}
-              >
-                SEE THE WEBSITES →
-              </Link>
+
+            <div className="hb-stage">
+              <div className={`hb-book ${bookOpen ? "open" : ""} ${saveState === "saved" || saveState === "local" ? "hb-saved" : ""} ${!bookOpen && saveState === "idle" ? "beat" : ""}`}>
+                {/* closed cover: a beating heart-book */}
+                <button
+                  type="button"
+                  className="hb-cover"
+                  aria-label={bookOpen ? "Aavrit's List — open" : "Open Aavrit's List to save your name"}
+                  onClick={() => setBookOpen((v) => !v)}
+                  style={{
+                    background: "linear-gradient(135deg, #ff5055 0%, #e2213f 55%, #a3122e 100%)",
+                    border: "3px solid #111",
+                    boxShadow: "6px 7px 0 rgba(17,17,17,0.85)",
+                    display: "grid",
+                    placeItems: "center",
+                  }}
+                >
+                  <span className="flex flex-col items-center gap-2">
+                    <svg width="52" height="48" viewBox="0 0 24 22" aria-hidden="true" fill="#fff1e1">
+                      <path d="M12 21s-9.5-5.7-11.3-11C-.6 6.2 2.2 2 6.2 2c2.4 0 4.4 1.3 5.8 3.2C13.4 3.3 15.4 2 17.8 2c4 0 6.8 4.2 5.5 8-1.8 5.3-11.3 11-11.3 11z" />
+                    </svg>
+                    <span className="voice-marker text-xl leading-none" style={{ color: "#fff1e1" }}>
+                      Aavrit&apos;s List
+                    </span>
+                    <span className="mono-label" style={{ color: "#ffd7da" }}>
+                      {bookOpen ? "TAP TO KEEP IT SAFE" : existingFriend ? `· ${existingFriend} IS IN HERE ·` : "TAP TO OPEN"}
+                    </span>
+                  </span>
+                </button>
+
+                {/* open pages */}
+                <div className="hb-page hb-page-left">
+                  <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center">
+                    <p className="mono-label" style={{ color: "#7a5a2f" }}>AS PROMISED — THE NAMES</p>
+                    <p className="voice-marker text-[0.95rem] leading-snug sm:text-lg" style={{ color: "#060029" }}>
+                      {reward}
+                    </p>
+                    <Link href="/websites" className="pill mt-1 border-[#111]" style={{ background: "#ffd200", color: "#111" }} onClick={() => setShowReward(false)}>
+                      SEE THE WEBSITES →
+                    </Link>
+                  </div>
+                </div>
+                <div className="hb-page hb-page-right">
+                  <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center">
+                    {existingFriend ? (
+                      <>
+                        <p className="voice-marker text-lg leading-snug" style={{ color: "#060029" }}>
+                          You&apos;re in the List, {existingFriend} <span className="hb-heart">❤</span>
+                        </p>
+                        <p className="mono-label" style={{ color: "#5a6b60" }}>SAVED IN THE HEART — FOREVER</p>
+                      </>
+                    ) : (
+                      <form onSubmit={saveFriend} className="flex w-full flex-col items-center gap-2">
+                        <p className="voice-marker text-lg leading-snug" style={{ color: "#060029" }}>
+                          Save your name in Aavrit&apos;s List <span className="hb-heart">❤</span>
+                        </p>
+                        <p className="mono-label" style={{ color: "#5a6b60" }}>THIS IS THE REWARD — BE REMEMBERED</p>
+                        <input
+                          value={friendName}
+                          onChange={(e) => setFriendName(e.target.value)}
+                          maxLength={40}
+                          required
+                          minLength={2}
+                          placeholder="your name"
+                          aria-label="Your name for Aavrit's List"
+                          className="w-[min(15rem,80%)] rounded-lg border-2 border-[#111] bg-white px-3 py-2 text-center font-semibold"
+                          style={{ color: "#111" }}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <button
+                          type="submit"
+                          disabled={saveState === "saving" || friendName.trim().length < 2}
+                          className="mono-label rounded-full border-2 border-[#111] px-5 py-2 disabled:opacity-50"
+                          style={{ background: "#ff5055", color: "#fff" }}
+                        >
+                          {saveState === "saving" ? "WRITING…" : "SAVE MY NAME"}
+                        </button>
+                        {saveState === "local" ? (
+                          <p className="mono-label" style={{ color: "#7a5a2f" }}>KEPT ON THIS DEVICE — IT FLIES TO AAVRIT&apos;S BOOK WHEN HE OPENS THE CONNECTION</p>
+                        ) : null}
+                      </form>
+                    )}
+                  </div>
+                </div>
+                <span className="hb-spine" aria-hidden="true" />
+
+                {/* saved-in-the-heart flash */}
+                <div className="hb-flash">
+                  <span className="voice-marker text-2xl" style={{ color: "#fff", textShadow: "0 2px 0 #111" }}>
+                    {saveState === "saved" || saveState === "local" ? "SAVED IN THE HEART ❤" : ""}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-3">
               <button
                 type="button"
-                className="mono-label rounded-full border-2 border-[#111] px-4 py-2"
-                style={{ background: "transparent", color: "#111" }}
+                className="mono-label rounded-full border-2 px-4 py-2"
+                style={{ background: "transparent", color: "#fff1e1", borderColor: "#fff1e1" }}
                 onClick={() => setShowReward(false)}
               >
                 KEEP READING

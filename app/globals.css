@@ -1212,3 +1212,160 @@ section[id] { scroll-margin-top: 5.5rem; }
     font-size: clamp(2.6rem, 15vw, 4rem) !important;
   }
 }
+
+/* ═══════════════ ROUND: life & clarity ═══════════════
+   Gate loading moment, living monogram, heart-book reward,
+   and de-clutter rules that keep every layout breathing. */
+
+/* ── "ENTERING AAVRIT'S PORTFOLIO…" ── */
+.gate-loading {
+  margin-top: clamp(1.6rem, 4vh, 3rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+  pointer-events: none;
+}
+.gate-bar {
+  width: clamp(9rem, 34vw, 15rem);
+  height: 4px;
+  border: 1.5px solid rgba(27, 54, 36, 0.55);
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 246, 236, 0.6);
+}
+.gate-bar i {
+  display: block;
+  height: 100%;
+  width: 38%;
+  background: #1b3624;
+  animation: gate-slide 1.15s cubic-bezier(0.6, 0.05, 0.35, 1) infinite;
+}
+@keyframes gate-slide {
+  0% { transform: translateX(-110%); }
+  100% { transform: translateX(290%); }
+}
+.gate-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  color: #5a6b60;
+  white-space: nowrap;
+}
+.gate-dots { display: inline-flex; gap: 4px; }
+.gate-dots b {
+  width: 5px; height: 5px; border-radius: 999px;
+  background: #1b3624;
+  animation: gate-dot 1.2s ease-in-out infinite;
+}
+.gate-dots b:nth-child(2) { animation-delay: 0.18s; }
+.gate-dots b:nth-child(3) { animation-delay: 0.36s; }
+@keyframes gate-dot {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.45; }
+  30% { transform: translateY(-5px); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gate-bar i, .gate-dots b { animation: none; }
+}
+
+/* ── living monogram — the header tiles breathe ── */
+.tile-live {
+  animation: tile-breathe 3.8s ease-in-out infinite;
+  transform-origin: 55% 60%;
+}
+.tile-live-2 { animation-delay: 1.9s; }
+@keyframes tile-breathe {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  30% { transform: translateY(-1.5px) rotate(-1.4deg); }
+  65% { transform: translateY(0.5px) rotate(1deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tile-live { animation: none; }
+}
+
+/* ── THE HEART BOOK — sticker-hunt reward ── */
+.hb-stage { perspective: 1400px; }
+.hb-book {
+  position: relative;
+  width: min(30rem, 88vw);
+  aspect-ratio: 3 / 2;
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.34, 1.4, 0.5, 1);
+}
+.hb-book.beat { animation: hb-beat 1.6s ease-in-out infinite; }
+@keyframes hb-beat {
+  0%, 100% { transform: scale(1); }
+  12% { transform: scale(1.045); }
+  24% { transform: scale(1); }
+  36% { transform: scale(1.03); }
+  48% { transform: scale(1); }
+}
+.hb-cover {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  transform-origin: left center;
+  transition: transform 0.85s cubic-bezier(0.6, 0.05, 0.3, 1);
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  cursor: pointer;
+  border-radius: 14px 22px 22px 14px;
+}
+.hb-book.open .hb-cover { transform: rotateY(-142deg); }
+.hb-page {
+  position: absolute;
+  inset: 0;
+  border-radius: 14px 22px 22px 14px;
+  background: #fff1e1;
+  overflow: hidden;
+}
+.hb-page-left {
+  clip-path: inset(0 50% 0 0);
+  background: #f7e8d2;
+  box-shadow: inset -14px 0 22px -16px rgba(17, 17, 17, 0.45);
+}
+.hb-page-right { box-shadow: inset 14px 0 22px -16px rgba(17, 17, 17, 0.35); }
+.hb-spine {
+  position: absolute;
+  left: 50%;
+  top: 4%;
+  bottom: 4%;
+  width: 3px;
+  background: rgba(17, 17, 17, 0.22);
+  transform: translateX(-50%);
+  border-radius: 99px;
+}
+.hb-heart {
+  display: inline-block;
+  animation: hb-beat 1.6s ease-in-out infinite;
+}
+.hb-book.hb-saved .hb-cover { transform: rotateY(0deg); }
+.hb-flash {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  opacity: 0;
+}
+.hb-book.hb-saved .hb-flash { animation: hb-flash-pop 1.1s ease forwards; }
+@keyframes hb-flash-pop {
+  0% { opacity: 0; transform: scale(0.6); }
+  35% { opacity: 1; transform: scale(1.06); }
+  70% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hb-book, .hb-cover, .hb-book.beat, .hb-heart { animation: none !important; transition-duration: 0.2s; }
+}
+
+/* ── de-clutter: calmer density everywhere ── */
+@media (max-width: 640px) {
+  .quest-tray { transform: scale(0.92); transform-origin: bottom left; }
+  .quest-sticker { width: 44px !important; height: 44px !important; }
+  .marquee .voice-condensed { letter-spacing: 0.02em; }
+}
